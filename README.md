@@ -1,4 +1,5 @@
 #  Schedule to Google Calendar
+![GitHub last commit](https://img.shields.io/github/last-commit/Leoneix/Scheduler)[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)![Gemini](https://img.shields.io/badge/AI-Gemini-ff6f00)![Google Calendar](https://img.shields.io/badge/Google%20Calendar-API-4285F4?logo=googlecalendar&logoColor=white)![Status](https://img.shields.io/badge/Project-MVP-yellow)![Maintained](https://img.shields.io/badge/Maintained-Yes-brightgreen)![Open Source](https://img.shields.io/badge/Open%20Source-Yes-blue)
 
 A Python tool that converts **weekly schedules from images or PDFs into Google Calendar events automatically** using AI.
 
@@ -21,21 +22,6 @@ Instead of manually typing schedules into your calendar, simply upload a screens
 -  **Smart Dates:** Automatically detects the next weekday occurrence for the initial event.
 
 ---
-
-## Badges
-
-Add badges from somewhere like: [shields.io](https://shields.io/)
-
-![GitHub last commit](https://img.shields.io/github/last-commit/Leoneix/Scheduler)
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
-
-![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)
-![Gemini](https://img.shields.io/badge/AI-Gemini-ff6f00)
-![Google Calendar](https://img.shields.io/badge/Google%20Calendar-API-4285F4?logo=googlecalendar&logoColor=white)
-![Status](https://img.shields.io/badge/Project-MVP-yellow)
-
-![Maintained](https://img.shields.io/badge/Maintained-Yes-brightgreen)
-![Open Source](https://img.shields.io/badge/Open%20Source-Yes-blue)
 
 ## Installation
 
