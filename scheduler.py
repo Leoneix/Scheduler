@@ -7,11 +7,30 @@ from google import genai
 from tkinter import Tk, filedialog
 
 
-API_KEY = "AIzaSyDUpQa9tYHQEiNmgBfj9nAGccggRotqP9Q"
+API_KEY = "YOUR_API_KEY"
 client = genai.Client(api_key=API_KEY)
 
 SUPPORTED_IMAGES = [".jpg", ".jpeg", ".png"]
 SUPPORTED_PDF = ".pdf"
+
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+import os
+
+SCOPES = ["https://www.googleapis.com/auth/calendar"]
+
+def authenticate_google():
+
+    flow = InstalledAppFlow.from_client_secrets_file(
+        "credential.json",
+        SCOPES
+    )
+
+    creds = flow.run_local_server(port=0)
+
+    service = build("calendar", "v3", credentials=creds)
+
+    return service
 
 def select_file():
     root = Tk()
@@ -120,16 +139,126 @@ def decipher_schedule(file_path):
 
     return events
 
-def main():
+from datetime import datetime, timedelta
 
-    file_path = select_file()
+def normalize_day_name(day_name):
+    value = str(day_name or "").strip().lower()
 
-    events = decipher_schedule(file_path)
+    day_map = {
+        "mon": "Monday",
+        "monday": "Monday",
+        "tue": "Tuesday",
+        "tues": "Tuesday",
+        "tuesday": "Tuesday",
+        "wed": "Wednesday",
+        "wednesday": "Wednesday",
+        "thu": "Thursday",
+        "thur": "Thursday",
+        "thurs": "Thursday",
+        "thursday": "Thursday",
+        "fri": "Friday",
+        "friday": "Friday",
+        "sat": "Saturday",
+        "saturday": "Saturday",
+        "sun": "Sunday",
+        "sunday": "Sunday",
+    }
 
-    print("\nParsed Schedule:\n")
+    return day_map.get(value, "")
+
+def get_next_weekday(day_name):
+
+    days = [
+        "Monday","Tuesday","Wednesday",
+        "Thursday","Friday","Saturday","Sunday"
+    ]
+
+    normalized_day = normalize_day_name(day_name)
+    if not normalized_day:
+        raise ValueError(f"Invalid day name: {day_name}")
+
+    today = datetime.now()
+
+    target = days.index(normalized_day)
+
+    delta = (target - today.weekday()) % 7
+
+    return today + timedelta(days=delta)
+
+def create_calendar_event(service, event):
+
+    start_date = get_next_weekday(event["day"])
+
+    start_time = f"{start_date.date()}T{event['start_time']}:00"
+    end_time = f"{start_date.date()}T{event['end_time']}:00"
+
+    body = {
+        "summary": event["title"],
+        "start": {
+            "dateTime": start_time,
+            "timeZone": "Asia/Kolkata"
+        },
+        "end": {
+            "dateTime": end_time,
+            "timeZone": "Asia/Kolkata"
+        },
+        "recurrence": [
+            "RRULE:FREQ=WEEKLY"
+        ]
+    }
+
+    service.events().insert(
+        calendarId="primary",
+        body=body
+    ).execute()
+
+def clean_events(events):
+
+    cleaned = []
 
     for e in events:
+        if not isinstance(e, dict):
+            continue
+
+        title = str(e.get("title") or "").strip()
+        day = normalize_day_name(e.get("day"))
+        start_time = str(e.get("start_time") or "").strip()
+        end_time = str(e.get("end_time") or "").strip()
+
+        if not title:
+            continue
+
+        if not day:
+            continue
+
+        if not start_time:
+            continue
+
+        if not end_time:
+            continue
+
+        e["title"] = title
+        e["day"] = day
+        e["start_time"] = start_time
+        e["end_time"] = end_time
+        cleaned.append(e)
+
+    return cleaned
+
+def main():
+    file_path = select_file()
+    events = decipher_schedule(file_path)
+    events = clean_events(events)
+
+    print("\nParsed Schedule:\n")
+    for e in events:
         print(f"{e['day']}  {e['start_time']} - {e['end_time']}  {e['title']}")
+
+    service = authenticate_google()
+    for e in events:
+        create_calendar_event(service, e)
+
+    print("Events added to Google Calendar")
 
 
 if __name__ == "__main__":
