@@ -113,6 +113,17 @@ Return ONLY JSON in this format:
     return response.text
 
 
+REQUIRED_FIELDS = ["day", "start_time", "end_time", "title", "venue"]
+
+
+def is_valid_event(event):
+    for field in REQUIRED_FIELDS:
+        value = event.get(field)
+        if not isinstance(value, str) or not value.strip():
+            return False
+    return True
+
+
 def parse_json(text):
 
     match = re.search(r"\[.*\]", text, re.S)
@@ -135,7 +146,7 @@ def decipher_schedule(file_path):
 
         parsed = parse_json(raw)
 
-        events.extend(parsed)
+        events.extend(e for e in parsed if is_valid_event(e))
 
     return events
 
