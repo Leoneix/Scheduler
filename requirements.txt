@@ -15,5 +15,5 @@ google-auth-httplib2>=0.2.0
 google-api-python-client>=2.125.0
 
 # PDF & image handling
-pdf2image>=1.17.0
+pymupdf>=1.24.0
 Pillow>=10.3.0

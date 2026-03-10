@@ -3,13 +3,17 @@ import json
 import re
 import sys
 import ast
-from pdf2image import convert_from_path
+import fitz  # pymupdf
 from PIL import Image
 from google import genai
-from tkinter import Tk, filedialog
+try:
+    from tkinter import Tk, filedialog
+    _TKINTER_AVAILABLE = True
+except ImportError:
+    _TKINTER_AVAILABLE = False
 
 
-API_KEY = "YOUR_API_KEY"
+API_KEY = os.environ.get("GEMINI_API_KEY")
 client = genai.Client(api_key=API_KEY)
 
 SUPPORTED_IMAGES = [".jpg", ".jpeg", ".png"]
@@ -35,6 +39,8 @@ def authenticate_google():
     return service
 
 def select_file():
+    if not _TKINTER_AVAILABLE:
+        raise RuntimeError("tkinter is not available in this environment")
     root = Tk()
     root.withdraw()  # hide main tkinter window
 
@@ -55,13 +61,13 @@ def get_images_from_file(path):
 
     if ext == SUPPORTED_PDF:
 
-        images = convert_from_path(path)
+        doc = fitz.open(path)
         files = []
 
-        for i, img in enumerate(images):
+        for i, page in enumerate(doc):
 
             name = f"page_{i}.png"
-            img.save(name)
+            page.get_pixmap(dpi=150).save(name)
             files.append(name)
 
         return files

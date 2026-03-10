@@ -50,19 +50,12 @@ btnAuth.addEventListener("click", async () => {
   btnAuth.disabled = true;
   showSpinner("Opening Google sign-in…");
   try {
-    const res = await fetch(`${API}/auth`, { method: "POST" });
+    const res = await fetch(`${API}/auth/login`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || "Auth failed");
-    isAuthenticated = true;
-    setAuthBadge(true, data.email || "");
-    if (selectedFile) btnSchedule.disabled = false;
-    showToast(
-      `Authenticated as ${data.email || "Google Calendar"} \u2713`,
-      "success",
-    );
+    window.location.href = data.auth_url;
   } catch (err) {
     showToast(err.message, "error");
-  } finally {
     hideSpinner();
     btnAuth.disabled = false;
   }
@@ -222,6 +215,20 @@ function formatBytes(bytes) {
 
 /* ── Check auth status on load ───────────────────────────── */
 (async () => {
+  // Handle redirect back from Google OAuth callback
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get("auth") === "success") {
+    const email = urlParams.get("email") || "";
+    isAuthenticated = true;
+    setAuthBadge(true, email);
+    if (selectedFile) btnSchedule.disabled = false;
+    showToast(
+      `Authenticated as ${email || "Google Calendar"} \u2713`,
+      "success",
+    );
+    window.history.replaceState({}, "", window.location.pathname);
+    return;
+  }
   try {
     const res = await fetch(`${API}/auth/status`);
     if (!res.ok) return;

@@ -7,10 +7,11 @@ from typing import List, Optional
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel
 
-from google_auth_oauthlib.flow import InstalledAppFlow
+from google_auth_oauthlib.flow import Flow
+import json as _json
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
@@ -24,7 +25,7 @@ from scheduler import (
     clean_events,
     create_calendar_event,
 )
-from pdf2image import convert_from_path
+import fitz  # pymupdf
 
 # ---------------------------------------------------------------------------
 # Config
@@ -34,6 +35,8 @@ SCOPES = ["https://www.googleapis.com/auth/calendar"]
 TOKEN_FILE = "token.json"
 USER_EMAIL_FILE = "user_email.txt"
 CREDENTIAL_FILE = "credential.json"
+APP_URL = os.environ.get("APP_URL", "http://localhost:8000")
+REDIRECT_URI = f"{APP_URL}/auth/callback"
 SUPPORTED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png"}
 
 # ---------------------------------------------------------------------------
@@ -42,10 +45,16 @@ SUPPORTED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png"}
 
 @contextlib.asynccontextmanager
 async def lifespan(app):
-    # Reset auth state on every server start so the badge shows "Not authenticated"
+    # Reset auth state on every server start
     for f in (TOKEN_FILE, USER_EMAIL_FILE):
         if os.path.exists(f):
             os.remove(f)
+    # On cloud deployments, seed token from environment variable so auth
+    # survives container restarts without requiring re-authentication.
+    token_env = os.environ.get("GOOGLE_TOKEN_JSON")
+    if token_env:
+        with open(TOKEN_FILE, "w") as f:
+            f.write(token_env)
     yield
 
 
@@ -92,6 +101,20 @@ class ScheduleResponse(BaseModel):
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _load_credential_config() -> dict:
+    """Load OAuth client config from GOOGLE_CREDENTIAL_JSON env var or credential.json file."""
+    cred_env = os.environ.get("GOOGLE_CREDENTIAL_JSON")
+    if cred_env:
+        return _json.loads(cred_env)
+    if os.path.exists(CREDENTIAL_FILE):
+        with open(CREDENTIAL_FILE) as f:
+            return _json.load(f)
+    raise HTTPException(
+        status_code=500,
+        detail=f"Google credentials not found. Set GOOGLE_CREDENTIAL_JSON env var or add '{CREDENTIAL_FILE}'.",
+    )
+
+
 def _get_calendar_service():
     """Return an authenticated Google Calendar service using a stored token."""
     creds = None
@@ -118,11 +141,11 @@ def _images_from_upload(tmp_path: str, suffix: str) -> List[str]:
     tmp_dir = tempfile.mkdtemp()
 
     if suffix == ".pdf":
-        pages = convert_from_path(tmp_path)
+        doc = fitz.open(tmp_path)
         paths = []
-        for i, page in enumerate(pages):
+        for i, page in enumerate(doc):
             img_path = os.path.join(tmp_dir, f"page_{i}.png")
-            page.save(img_path)
+            page.get_pixmap(dpi=150).save(img_path)
             paths.append(img_path)
         return paths
 
@@ -223,27 +246,28 @@ def auth_status():
     return {"authenticated": False, "email": ""}
 
 
-@app.post("/auth", tags=["Auth"])
-def authenticate():
-    """
-    Trigger the Google OAuth2 consent flow.
-    Opens a browser on the machine running the server.
-    Only needed once — credentials are cached in token.json.
-    """
-    if not os.path.exists(CREDENTIAL_FILE):
-        raise HTTPException(
-            status_code=500,
-            detail=f"'{CREDENTIAL_FILE}' not found. Add OAuth client credentials first.",
-        )
+@app.get("/auth/login", tags=["Auth"])
+def auth_login():
+    """Return the Google OAuth2 authorization URL. The client should redirect the user to it."""
+    cred_config = _load_credential_config()
+    flow = Flow.from_client_config(cred_config, SCOPES, redirect_uri=REDIRECT_URI)
+    auth_url, _ = flow.authorization_url(access_type="offline", prompt="consent")
+    return {"auth_url": auth_url}
 
-    flow = InstalledAppFlow.from_client_secrets_file(CREDENTIAL_FILE, SCOPES)
-    creds = flow.run_local_server(port=0)
+
+@app.get("/auth/callback", tags=["Auth"])
+def auth_callback(code: str):
+    """Handle the Google OAuth2 redirect callback."""
+    cred_config = _load_credential_config()
+    flow = Flow.from_client_config(cred_config, SCOPES, redirect_uri=REDIRECT_URI)
+    flow.fetch_token(code=code)
+    creds = flow.credentials
 
     with open(TOKEN_FILE, "w") as f:
         f.write(creds.to_json())
 
     email = _fetch_and_save_email(creds)
-    return {"status": "authenticated", "email": email}
+    return RedirectResponse(url=f"/?auth=success&email={email}")
 
 
 @app.post("/extract", response_model=ExtractResponse, tags=["Schedule"])
