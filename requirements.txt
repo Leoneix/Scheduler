@@ -1,0 +1,19 @@
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9
+
+# Google Gemini
+google-genai>=0.8.0
+
+# Google Cloud Vision (OCR)
+google-cloud-vision>=3.0.0
+
+# Google Calendar
+google-auth>=2.29.0
+google-auth-oauthlib>=1.2.0
+google-auth-httplib2>=0.2.0
+google-api-python-client>=2.125.0
+
+# PDF & image handling
+pdf2image>=1.17.0
+Pillow>=10.3.0

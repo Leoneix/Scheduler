@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Schedule Importer</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="app">
+      <!-- ── Header ───────────────────────────────────────────── -->
+      <header>
+        <div class="logo">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+          <span>Schedule Importer</span>
+        </div>
+
+        <div class="auth-bar">
+          <span id="auth-status" class="badge badge--off"
+            >Not authenticated</span
+          >
+          <button id="btn-auth" class="btn btn--outline">
+            Connect Google Calendar
+          </button>
+        </div>
+      </header>
+
+      <!-- ── Main ─────────────────────────────────────────────── -->
+      <main>
+        <!-- Upload card -->
+        <section class="card" id="upload-card">
+          <h2>Upload Timetable</h2>
+          <p class="subtitle">Supports PDF, JPG, JPEG, PNG</p>
+
+          <label class="dropzone" id="dropzone" for="file-input">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <polyline points="16 16 12 12 8 16" />
+              <line x1="12" y1="12" x2="12" y2="21" />
+              <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+            </svg>
+            <span id="dropzone-label"
+              >Drag &amp; drop a file, or click to browse</span
+            >
+            <input
+              type="file"
+              id="file-input"
+              accept=".pdf,.jpg,.jpeg,.png"
+              hidden
+            />
+          </label>
+
+          <!-- Action buttons -->
+          <div class="actions">
+            <button id="btn-extract" class="btn btn--primary" disabled>
+              <span class="btn-icon">🔍</span> Preview Events
+            </button>
+            <button id="btn-schedule" class="btn btn--success" disabled>
+              <span class="btn-icon">📅</span> Add to Calendar
+            </button>
+          </div>
+        </section>
+
+        <!-- Spinner -->
+        <div id="spinner" class="spinner hidden" aria-live="polite">
+          <div class="spinner__ring"></div>
+          <span id="spinner-label">Processing…</span>
+        </div>
+
+        <!-- Toast -->
+        <div id="toast" class="toast hidden" role="alert"></div>
+
+        <!-- Events table -->
+        <section class="card hidden" id="results-card">
+          <div class="results-header">
+            <h2>
+              Extracted Events
+              <span id="event-count" class="badge badge--count"></span>
+            </h2>
+            <button class="btn btn--ghost btn--sm" id="btn-clear">
+              ✕ Clear
+            </button>
+          </div>
+
+          <div class="table-wrap">
+            <table id="events-table">
+              <thead>
+                <tr>
+                  <th>Day</th>
+                  <th>Start</th>
+                  <th>End</th>
+                  <th>Subject</th>
+                  <th>Slot</th>
+                  <th>Venue</th>
+                </tr>
+              </thead>
+              <tbody id="events-body"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
