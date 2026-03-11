@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from google_auth_oauthlib.flow import Flow
 import json as _json
 from google.oauth2.credentials import Credentials
-from google.auth.transport.requests import Request
+from google.auth.transport.requests import Request as GoogleAuthRequest
 from googleapiclient.discovery import build
 
 from google.genai.errors import ServerError as GeminiServerError, ClientError as GeminiClientError
@@ -123,7 +123,7 @@ def _get_calendar_service():
         creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
 
     if creds and creds.expired and creds.refresh_token:
-        creds.refresh(Request())
+        creds.refresh(GoogleAuthRequest())
         with open(TOKEN_FILE, "w") as f:
             f.write(creds.to_json())
 
@@ -237,7 +237,7 @@ def auth_status():
         if creds and creds.valid:
             return {"authenticated": True, "email": _read_user_email()}
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
+            creds.refresh(GoogleAuthRequest())
             with open(TOKEN_FILE, "w") as f:
                 f.write(creds.to_json())
             return {"authenticated": True, "email": _read_user_email()}
