@@ -4,7 +4,7 @@ import contextlib
 from pathlib import Path
 from typing import List, Optional
 
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, RedirectResponse
@@ -260,18 +260,24 @@ def auth_login():
 
 
 @app.get("/auth/callback", tags=["Auth"])
-def auth_callback(code: str):
+def auth_callback(request: Request):
     """Handle the Google OAuth2 redirect callback."""
-    cred_config = _load_credential_config()
-    flow = Flow.from_client_config(cred_config, SCOPES, redirect_uri=REDIRECT_URI)
-    flow.fetch_token(code=code)
-    creds = flow.credentials
+    import traceback
+    try:
+        cred_config = _load_credential_config()
+        flow = Flow.from_client_config(cred_config, SCOPES, redirect_uri=REDIRECT_URI)
+        # Use the full callback URL so oauthlib can parse code + scope correctly
+        os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")
+        flow.fetch_token(authorization_response=str(request.url))
+        creds = flow.credentials
 
-    with open(TOKEN_FILE, "w") as f:
-        f.write(creds.to_json())
+        with open(TOKEN_FILE, "w") as f:
+            f.write(creds.to_json())
 
-    email = _fetch_and_save_email(creds)
-    return RedirectResponse(url=f"/?auth=success&email={email}")
+        email = _fetch_and_save_email(creds)
+        return RedirectResponse(url=f"/?auth=success&email={email}")
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"OAuth callback failed: {exc}\n{traceback.format_exc()}")
 
 
 @app.post("/extract", response_model=ExtractResponse, tags=["Schedule"])
