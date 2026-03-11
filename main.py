@@ -251,7 +251,11 @@ def auth_login():
     """Return the Google OAuth2 authorization URL. The client should redirect the user to it."""
     cred_config = _load_credential_config()
     flow = Flow.from_client_config(cred_config, SCOPES, redirect_uri=REDIRECT_URI)
-    auth_url, _ = flow.authorization_url(access_type="offline", prompt="consent")
+    auth_url, _ = flow.authorization_url(
+        access_type="offline",
+        include_granted_scopes="true",
+        prompt="select_account",
+    )
     return {"auth_url": auth_url}
 
 
