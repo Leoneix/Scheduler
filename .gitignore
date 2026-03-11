@@ -1,5 +1,6 @@
+*.pyo
+token.json
+credential.json
+user_email.txt
 __pycache__/
 *.pyc
-*.pyo
-credential.json
-
