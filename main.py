@@ -255,6 +255,7 @@ def auth_login():
         access_type="offline",
         include_granted_scopes="true",
         prompt="select_account",
+        code_challenge_method=None,  # disable PKCE — stateless server can't preserve code_verifier
     )
     return {"auth_url": auth_url}
 
@@ -264,11 +265,13 @@ def auth_callback(request: Request):
     """Handle the Google OAuth2 redirect callback."""
     import traceback
     try:
+        code = request.query_params.get("code")
+        if not code:
+            raise HTTPException(status_code=400, detail="Missing code parameter in callback.")
+        os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")
         cred_config = _load_credential_config()
         flow = Flow.from_client_config(cred_config, SCOPES, redirect_uri=REDIRECT_URI)
-        # Use the full callback URL so oauthlib can parse code + scope correctly
-        os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")
-        flow.fetch_token(authorization_response=str(request.url))
+        flow.fetch_token(code=code)
         creds = flow.credentials
 
         with open(TOKEN_FILE, "w") as f:
