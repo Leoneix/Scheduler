@@ -255,7 +255,6 @@ def auth_login():
         access_type="offline",
         include_granted_scopes="true",
         prompt="select_account",
-        code_challenge_method=None,  # disable PKCE — stateless server can't preserve code_verifier
     )
     return {"auth_url": auth_url}
 
