@@ -42,7 +42,7 @@ Add it directly to your script (or set it as an environment variable):
 OPENROUTER_API_KEY="YOUR_API_KEY"
 ```
 
-You can also choose the model through `OPENROUTER_MODEL`. The default is `google/gemini-2.5-flash`.
+You can also choose the model through `OPENROUTER_MODEL`. The default is `google/gemini-3-flash-preview`.
 
 ---
 
