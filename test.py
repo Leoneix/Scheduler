@@ -92,6 +92,17 @@ class TestParseJson(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]["day"], "Tuesday")
 
+    def test_salvages_events_from_truncated_array(self):
+        text = (
+            '[{"day":"Tuesday","start_time":"08:00","end_time":"08:50","title":"CSE3008","slot":"TFF1","venue":"CB-G16"},'
+            '{"day":"Tuesday","start_time":"10:01","end_time":"10:50","title":"CSE1005","slot":"B1","venue":"CB-315"},'
+            '{"day":"Wednesday","start_time":"12:01","end_time":"12:50","title":"CSE2007"'
+        )
+        result = parse_json(text)
+        self.assertGreaterEqual(len(result), 2)
+        self.assertEqual(result[0]["title"], "CSE3008")
+        self.assertEqual(result[1]["venue"], "CB-315")
+
 
 if __name__ == "__main__":
     unittest.main()

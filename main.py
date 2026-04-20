@@ -16,12 +16,11 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request as GoogleAuthRequest
 from googleapiclient.discovery import build
 
-from google.genai.errors import ServerError as GeminiServerError, ClientError as GeminiClientError
-
 from scheduler import (
     extract_schedule,
     parse_json,
     is_valid_event,
+    normalize_extracted_event,
     clean_events,
     create_calendar_event,
 )
@@ -35,6 +34,7 @@ SCOPES = ["https://www.googleapis.com/auth/calendar"]
 TOKEN_FILE = "token.json"
 USER_EMAIL_FILE = "user_email.txt"
 CREDENTIAL_FILE = "credential.json"
+PKCE_STORE_FILE = "oauth_pkce_store.json"
 APP_URL = os.environ.get("APP_URL", "http://localhost:8000")
 REDIRECT_URI = f"{APP_URL}/auth/callback"
 SUPPORTED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png"}
@@ -115,6 +115,34 @@ def _load_credential_config() -> dict:
     )
 
 
+def _load_pkce_store() -> dict:
+    if os.path.exists(PKCE_STORE_FILE):
+        try:
+            with open(PKCE_STORE_FILE) as f:
+                return _json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+
+def _save_pkce_store(store: dict) -> None:
+    with open(PKCE_STORE_FILE, "w") as f:
+        _json.dump(store, f)
+
+
+def _save_code_verifier(state: str, code_verifier: str) -> None:
+    store = _load_pkce_store()
+    store[state] = code_verifier
+    _save_pkce_store(store)
+
+
+def _pop_code_verifier(state: str) -> str:
+    store = _load_pkce_store()
+    code_verifier = store.pop(state, "")
+    _save_pkce_store(store)
+    return code_verifier
+
+
 def _get_calendar_service():
     """Return an authenticated Google Calendar service using a stored token."""
     creds = None
@@ -171,23 +199,34 @@ def _extract_events_from_upload(file: UploadFile) -> List[dict]:
         tmp_dir = os.path.dirname(img_paths[0]) if img_paths else None
 
         events: List[dict] = []
-        for img in img_paths:
+        for idx, img in enumerate(img_paths, start=1):
             try:
                 raw = extract_schedule(img)
-            except GeminiClientError as e:
-                if e.status_code == 429:
+            except Exception as e:
+                status_code = getattr(e, "status_code", None)
+                if status_code == 429:
                     raise HTTPException(
                         status_code=429,
                         detail="AI API rate limit exceeded. Please wait a minute and try again.",
                     )
-                raise HTTPException(status_code=502, detail=f"Gemini API error: {e}")
-            except GeminiServerError as e:
-                raise HTTPException(
-                    status_code=503,
-                    detail=f"Gemini AI is temporarily unavailable (high demand). Please try again in a moment. [{e}]",
-                )
+                if status_code == 503:
+                    raise HTTPException(
+                        status_code=503,
+                        detail=f"OpenRouter AI is temporarily unavailable. Please try again in a moment. [{e}]",
+                    )
+                raise HTTPException(status_code=502, detail=f"OpenRouter API error: {e}")
+            print(f"[extract] page {idx}/{len(img_paths)}: raw length={len(raw or '')}")
+            preview = (raw or "")[:800].replace("\n", " ")
+            print(f"[extract] page {idx} raw preview: {preview}")
+
             parsed = parse_json(raw)
-            events.extend(e for e in parsed if is_valid_event(e))
+            print(f"[extract] page {idx}: parsed candidates={len(parsed)}")
+
+            normalized_events = [normalize_extracted_event(e) for e in parsed]
+            valid_events = [e for e in normalized_events if is_valid_event(e)]
+            print(f"[extract] page {idx}: valid events={len(valid_events)}")
+
+            events.extend(valid_events)
 
         return clean_events(events)
     finally:
@@ -251,11 +290,14 @@ def auth_login():
     """Return the Google OAuth2 authorization URL. The client should redirect the user to it."""
     cred_config = _load_credential_config()
     flow = Flow.from_client_config(cred_config, SCOPES, redirect_uri=REDIRECT_URI)
-    auth_url, _ = flow.authorization_url(
+    auth_url, state = flow.authorization_url(
         access_type="offline",
         include_granted_scopes="true",
         prompt="select_account",
+        autogenerate_code_verifier=True,
     )
+    if getattr(flow, "code_verifier", None):
+        _save_code_verifier(state, flow.code_verifier)
     return {"auth_url": auth_url}
 
 
@@ -265,11 +307,21 @@ def auth_callback(request: Request):
     import traceback
     try:
         code = request.query_params.get("code")
+        state = request.query_params.get("state")
         if not code:
             raise HTTPException(status_code=400, detail="Missing code parameter in callback.")
+        if not state:
+            raise HTTPException(status_code=400, detail="Missing state parameter in callback.")
         os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")
         cred_config = _load_credential_config()
-        flow = Flow.from_client_config(cred_config, SCOPES, redirect_uri=REDIRECT_URI)
+        flow = Flow.from_client_config(cred_config, SCOPES, state=state, redirect_uri=REDIRECT_URI)
+        code_verifier = _pop_code_verifier(state)
+        if not code_verifier:
+            raise HTTPException(
+                status_code=400,
+                detail="OAuth session expired or invalid. Please start login again.",
+            )
+        flow.code_verifier = code_verifier
         flow.fetch_token(code=code)
         creds = flow.credentials
 

@@ -1,13 +1,156 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
-    <title>Terms of Service</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Terms of Service | Schedule Importer</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <style>
+      .legal-wrap {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 32px 20px 56px;
+      }
+
+      .legal-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 28px;
+      }
+
+      .legal-card h1 {
+        font-size: 1.6rem;
+        margin-bottom: 8px;
+      }
+
+      .legal-meta {
+        color: var(--text-muted);
+        margin-bottom: 18px;
+        font-size: 0.92rem;
+      }
+
+      .legal-card h2 {
+        margin-top: 22px;
+        margin-bottom: 8px;
+        font-size: 1.05rem;
+      }
+
+      .legal-card p,
+      .legal-card li {
+        color: var(--text);
+        font-size: 0.95rem;
+      }
+
+      .legal-card ul {
+        padding-left: 20px;
+      }
+
+      .legal-card li + li,
+      .legal-card p + p {
+        margin-top: 8px;
+      }
+
+      .back-link {
+        display: inline-flex;
+        margin-top: 22px;
+        text-decoration: none;
+        font-weight: 600;
+        color: var(--primary);
+      }
+
+      .back-link:hover {
+        color: var(--primary-h);
+      }
+
+      @media (max-width: 520px) {
+        .legal-card {
+          padding: 20px 16px;
+        }
+      }
+    </style>
   </head>
   <body>
-    <h1>Terms of Service</h1>
-    <p>
-      By using this app, you agree to use it only for its intended purpose of
-      importing schedules into Google Calendar. Use at your own risk.
-    </p>
+    <main class="legal-wrap">
+      <section class="legal-card">
+        <h1>Terms of Service</h1>
+        <p class="legal-meta">Last updated: April 20, 2026</p>
+
+        <p>
+          These Terms of Service govern your use of Schedule Importer. By using
+          the service, you agree to these terms.
+        </p>
+
+        <h2>1. Service Description</h2>
+        <p>
+          Schedule Importer allows you to upload timetable files, extract
+          structured class information using AI, and create events in Google
+          Calendar.
+        </p>
+
+        <h2>2. Eligibility and Acceptable Use</h2>
+        <ul>
+          <li>You are responsible for files and content you upload.</li>
+          <li>
+            You may use the service only for lawful and legitimate scheduling
+            purposes.
+          </li>
+          <li>
+            You must not attempt to abuse, disrupt, reverse engineer, or
+            overload the service.
+          </li>
+        </ul>
+
+        <h2>3. Google Account Authorization</h2>
+        <p>
+          To create events, you must authorize access to Google Calendar through
+          OAuth. You can revoke access at any time from your Google account
+          settings.
+        </p>
+
+        <h2>4. Accuracy and User Responsibility</h2>
+        <ul>
+          <li>
+            AI extraction may produce errors. You are responsible for reviewing
+            events before they are added to your calendar.
+          </li>
+          <li>
+            You are responsible for verifying event times, recurrence, and venue
+            details.
+          </li>
+        </ul>
+
+        <h2>5. Third-Party Dependencies</h2>
+        <p>
+          This service depends on third-party platforms, including OpenRouter
+          and Google APIs. Service availability may be affected by those
+          providers.
+        </p>
+
+        <h2>6. Disclaimer of Warranties</h2>
+        <p>
+          The service is provided on an "as is" and "as available" basis without
+          warranties of any kind, including accuracy, reliability, or fitness
+          for a particular purpose.
+        </p>
+
+        <h2>7. Limitation of Liability</h2>
+        <p>
+          To the maximum extent permitted by law, the service operators are not
+          liable for any indirect, incidental, special, or consequential damages
+          arising from your use of the service, including missed events or
+          scheduling conflicts.
+        </p>
+
+        <h2>8. Changes to Terms</h2>
+        <p>
+          These terms may be updated from time to time. Continued use of the
+          service after updates means you accept the revised terms.
+        </p>
+
+        <a class="back-link" href="/">Return to Schedule Importer</a>
+      </section>
+    </main>
   </body>
 </html>

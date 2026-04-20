@@ -65,7 +65,7 @@ btnAuth.addEventListener("click", async () => {
 btnExtract.addEventListener("click", async () => {
   if (!selectedFile) return;
   showSpinner(
-    "Uploading file and extracting with Gemini AI… (may take 15–30 s)",
+    "Uploading file and extracting with OpenRouter AI… (may take 15–30 s)",
   );
   setButtons(false);
 
@@ -94,7 +94,7 @@ btnExtract.addEventListener("click", async () => {
 btnSchedule.addEventListener("click", async () => {
   if (!selectedFile) return;
   showSpinner(
-    "Extracting with Gemini AI and adding to Google Calendar… (may take 15–30 s)",
+    "Extracting with OpenRouter AI and adding to Google Calendar… (may take 15–30 s)",
   );
   setButtons(false);
 

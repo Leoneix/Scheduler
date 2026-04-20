@@ -1,14 +1,16 @@
 import os
 import json
 import re
+import base64
+import time
 from pdf2image import convert_from_path
 from PIL import Image
-from google import genai
+from openai import OpenAI
 from tkinter import Tk, filedialog
 
 
-API_KEY = "AIzaSyB6yLuFEeqU79Iw9kDwTm0zFRKBvnE0Pao"
-client = genai.Client(api_key=API_KEY)
+API_KEY = os.environ.get("OPENROUTER_API_KEY")
+client = OpenAI(api_key=API_KEY, base_url="https://openrouter.ai/api/v1")
 
 SUPPORTED_IMAGES = [".jpg", ".jpeg", ".png"]
 SUPPORTED_PDF = ".pdf"
@@ -53,9 +55,6 @@ def get_images_from_file(path):
         raise ValueError("Unsupported file format")
 
 
-import google.genai as genai
-from google.genai import types
-
 def extract_schedule(image_path):
 
     with open(image_path, "rb") as f:
@@ -81,18 +80,24 @@ Omit JSON where any of the fields are empty or NULL
 ]
 """
 
-    response = client.models.generate_content(
-        model="gemini-3-flash-preview",
-        contents=[
-            prompt,
-            types.Part.from_bytes(
-                data=image_bytes,
-                mime_type="image/png"
-            )
+    data_url = f"data:image/png;base64,{base64.b64encode(image_bytes).decode('ascii')}"
+
+    response = client.chat.completions.create(
+        model=os.environ.get("OPENROUTER_MODEL", "google/gemini-2.5-flash"),
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": data_url}},
+                ],
+            }
         ],
+        temperature=0,
+        max_tokens=1200,
     )
 
-    return response.text
+    return response.choices[0].message.content or ""
 
 
 def parse_json(text):

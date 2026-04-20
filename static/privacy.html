@@ -1,14 +1,167 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
-    <title>Privacy Policy</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy Policy | Schedule Importer</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <style>
+      .legal-wrap {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 32px 20px 56px;
+      }
+
+      .legal-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 28px;
+      }
+
+      .legal-card h1 {
+        font-size: 1.6rem;
+        margin-bottom: 8px;
+      }
+
+      .legal-meta {
+        color: var(--text-muted);
+        margin-bottom: 18px;
+        font-size: 0.92rem;
+      }
+
+      .legal-card h2 {
+        margin-top: 22px;
+        margin-bottom: 8px;
+        font-size: 1.05rem;
+      }
+
+      .legal-card p,
+      .legal-card li {
+        color: var(--text);
+        font-size: 0.95rem;
+      }
+
+      .legal-card ul {
+        padding-left: 20px;
+      }
+
+      .legal-card li + li,
+      .legal-card p + p {
+        margin-top: 8px;
+      }
+
+      .back-link {
+        display: inline-flex;
+        margin-top: 22px;
+        text-decoration: none;
+        font-weight: 600;
+        color: var(--primary);
+      }
+
+      .back-link:hover {
+        color: var(--primary-h);
+      }
+
+      @media (max-width: 520px) {
+        .legal-card {
+          padding: 20px 16px;
+        }
+      }
+    </style>
   </head>
   <body>
-    <h1>Privacy Policy</h1>
-    <p>
-      This app accesses your Google Calendar solely to add schedule events on
-      your behalf. No data is stored or shared with third parties. You can
-      revoke access at any time via your Google Account settings.
-    </p>
+    <main class="legal-wrap">
+      <section class="legal-card">
+        <h1>Privacy Policy</h1>
+        <p class="legal-meta">Last updated: April 20, 2026</p>
+
+        <p>
+          Schedule Importer helps you extract timetable events from uploaded
+          files and create events in your Google Calendar. This policy explains
+          what data is processed, how it is used, and what controls you have.
+        </p>
+
+        <h2>1. Data We Process</h2>
+        <ul>
+          <li>
+            Uploaded files: timetable PDFs and images you submit for event
+            extraction.
+          </li>
+          <li>
+            Extracted schedule data: day, start and end time, title, slot, and
+            venue.
+          </li>
+          <li>
+            Google account data: your primary calendar email and OAuth tokens
+            used to access Google Calendar.
+          </li>
+        </ul>
+
+        <h2>2. How We Use Data</h2>
+        <ul>
+          <li>To parse your timetable into calendar-ready event entries.</li>
+          <li>To show you extracted events for review before scheduling.</li>
+          <li>
+            To create events in your Google Calendar after your confirmation.
+          </li>
+          <li>
+            To maintain your authenticated session so you do not need to sign in
+            for every request.
+          </li>
+        </ul>
+
+        <h2>3. Third-Party Services</h2>
+        <p>
+          Uploaded timetable content is sent to an AI provider through
+          OpenRouter to extract event information. Calendar operations are
+          performed through Google Calendar API after you grant permission.
+        </p>
+
+        <h2>4. Storage and Retention</h2>
+        <ul>
+          <li>
+            Temporary upload files are created during processing and removed
+            after extraction completes.
+          </li>
+          <li>
+            OAuth credentials may be stored locally on the server to support
+            calendar access and token refresh.
+          </li>
+          <li>
+            The app does not maintain a separate long-term database of your
+            timetable history.
+          </li>
+        </ul>
+
+        <h2>5. Your Choices</h2>
+        <ul>
+          <li>
+            You can review extracted events before creating calendar entries.
+          </li>
+          <li>
+            You can revoke Google Calendar access from your Google account
+            settings.
+          </li>
+          <li>You can stop using the service at any time.</li>
+        </ul>
+
+        <h2>6. Security</h2>
+        <p>
+          Reasonable technical safeguards are used to protect credentials and
+          data in transit. However, no internet service can be guaranteed to be
+          fully secure.
+        </p>
+
+        <h2>7. Changes to This Policy</h2>
+        <p>
+          This Privacy Policy may be updated over time. The latest version will
+          always be available on this page with an updated effective date.
+        </p>
+
+        <a class="back-link" href="/">Return to Schedule Importer</a>
+      </section>
+    </main>
   </body>
 </html>
