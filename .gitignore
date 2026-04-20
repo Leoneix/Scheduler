@@ -3,6 +3,7 @@ token.json
 credential.json
 user_email.txt
 __pycache__/
+__pycache__/scheduler.cpython-312.pyc
 credential.json
 oauth_pkce_store.json
 .conda/
